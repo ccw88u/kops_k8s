@@ -140,6 +140,8 @@ i-094237e11d2e888a3   Ready    node            11h   v1.26.2
 i-0c6e797d63bec4382   Ready    control-plane   11h   v1.26.2
  ```
 
+![](https://imgur.com/epwFtra.png)
+
 ### 刪除cluster: master / node
 
  ```bash=
