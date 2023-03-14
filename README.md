@@ -1,6 +1,13 @@
 
 # Kops 、 K8s、 AWS setting Sub domain
   - kops : 1.26.2
+
+```bash=
+$ curl -LO https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64
+$ chmod +x kops-linux-amd64
+$ sudo mv kops-linux-amd64 /usr/local/bin/kops
+$ kops version
+```
   - k8s  : v1.26.2 
   - kubectl : 
 ```
@@ -11,6 +18,15 @@ Server Version: version.Info{Major:"1", Minor:"26", GitVersion:"v1.26.2", GitCom
 ```
   - NGINX Ingress Controller: ingress-nginx-controller-v1.6.4.yaml
 
+
+## Linux install AWS CLI
+
+```bash=
+# awscli 套件
+$ sudo apt install awscli
+$ aws --version
+aws-cli/1.18.69 Python/3.6.9 Linux/4.15.0-147-generic botocore/1.16.19
+```
 
 ## Domain:
    - 這是在 AWS Router 53 上購買的Domain: wenwen999.link
@@ -63,5 +79,70 @@ export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
 
 ## 設定 AWS S3
   - [reference](https://kops.sigs.k8s.io/getting_started/aws/#using-s3-default-bucket-encryption)
+  - 本次測試路徑為: 
 
-##
+
+## Kops 安裝
+  - name: cluster name
+  - dns-zone -> sub domain
+  - Master node 於新版 k8s 建議 Mem: 2G -> ==t2.medium==，選擇 t2.micro 可能會造成無法正常
+  - dns-zone : Rounter 53 上的註冊domain k8s.wenwen999.link
+  
+### 初始設定 kops & AWS 設定
+```bash=
+kops create cluster \
+ --name=k8s.wenwen999.link \
+ --state=s3://kops.wenwen999.link \
+ --zones=us-west-2a \
+ --master-size=t2.medium \
+ --node-size=t2.medium \
+ --node-count=2 \
+ --dns-zone=k8s.wenwen999.link
+``` 
+  - <output>
+Must specify --yes to apply changes
+Cluster configuration has been created.
+Suggestions:
+ * list clusters with: kops get cluster
+ * edit this cluster with: kops edit cluster k8s.wenwen999.link
+ * edit your node instance group: kops edit ig --name=k8s.wenwen999.link nodes-us-west-2a
+ * edit your control-plane instance group: kops edit ig --name=k8s.wenwen999.link control-plane-us-west-2a
+
+
+### 確認無誤後，執行 create cluster
+  -  Finally configure your cluster with: kops update cluster --name k8s.wenwen999.link --yes --admin
+
+```
+%根據最後 kops update cluster 建議補上 --state=s3://kops.wenwen999.link
+kops update cluster --name k8s.wenwen999.link --yes --admin  --state=s3://kops.wenwen999.link
+```
+
+  - **<output>**
+
+```
+Cluster is starting.  It should be ready in a few minutes.
+
+Suggestions:
+ * validate cluster: kops validate cluster --wait 10m
+ * list nodes: kubectl get nodes --show-labels
+ * ssh to a control-plane node: ssh -i ~/.ssh/id_rsa ubuntu@api.k8s.wenwen999.link
+ * the ubuntu user is specific to Ubuntu. If not using Ubuntu please use the appropriate user based on your OS.
+ * read about installing addons at: https://kops.sigs.k8s.io/addons.
+```
+
+### 確認node節點
+
+ ```bash=
+$ kubectl get nodes
+NAME                  STATUS   ROLES           AGE   VERSION
+i-021a843d3dbb610d6   Ready    node            11h   v1.26.2
+i-094237e11d2e888a3   Ready    node            11h   v1.26.2
+i-0c6e797d63bec4382   Ready    control-plane   11h   v1.26.2
+ ```
+
+### 刪除cluster: master / node
+
+ ```bash=
+ kops delete cluster --name=k8s.wenwen999.link --state=s3://k8s.wenwen999.link --yes
+ ```
+
