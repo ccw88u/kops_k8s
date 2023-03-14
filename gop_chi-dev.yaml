@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gop-chi
+  namespace: ml-dev
+  labels:
+    app: gop-chi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gop-chi
+  template:
+    metadata:
+      labels:
+        app: gop-chi
+    spec:
+      containers:
+        - image: ponddy/gop_chi_flask:v1.1
+          name: gop-eng
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ml-dev
+  name: gop-chi
+  labels:
+    app: gop-chi
+    service: gop-chi
+spec:
+  ports:
+  - port: 80
+    targetPort: 8505
+    name: http
+  selector:
+    app: gop-chi
