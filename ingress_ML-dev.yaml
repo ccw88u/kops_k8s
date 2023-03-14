@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ml-dev-ingress
+  namespace: ml-dev
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    #nginx.ingress.kubernetes.io/proxy-body-size: "7m"
+    #ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"    
+spec:
+  rules:
+  # ml-dev.ponddy.org & ml-dev.ponddy.com 都要設定  
+  - host: ml-dev.k8s.wenwen999.link
+    http:
+      paths:
+      - path: /gop_eng(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: gop-eng
+            port:
+              name: http
