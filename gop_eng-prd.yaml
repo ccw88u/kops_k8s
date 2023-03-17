@@ -17,7 +17,11 @@ spec:
     spec:
       containers:
         - image: ponddy/gop_eng_flask:v1.8
-          name: gop-eng
+          resources:
+            requests:
+              memory: "1024Mi"
+              cpu: "1000m"        
+          name: gop-eng        
       imagePullSecrets:
         - name: regcred
 ---
