@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - image: ponddy/gop_chi_flask:v1.1
-          name: gop-eng
+          name: gop-chi
       imagePullSecrets:
         - name: regcred
 ---

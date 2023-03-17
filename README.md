@@ -88,7 +88,13 @@ export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
   - Master node 於新版 k8s 建議 Mem: 2G -> ==t2.medium==，選擇 t2.micro 可能會造成無法正常
   - dns-zone : Rounter 53 上的註冊domain k8s.wenwen999.link
   
-### 初始設定 kops & AWS 設定
+### 初始設定 kops & AWS 設定 
+   - 費用初估: us-west-2 奧勒岡
+   - t2.medium: 0.0464 USD per Hour 
+   - 一天: 0.0464 * 24 * 30 * 3(台) = 100
+   - 一個月:  100 * 30 = 3000 元
+   - 如果經費不足，可以將改成 node-count=1，或將 node-size=t2.small
+
 ```bash=
 kops create cluster \
  --name=k8s.wenwen999.link \
@@ -140,11 +146,31 @@ i-094237e11d2e888a3   Ready    node            11h   v1.26.2
 i-0c6e797d63bec4382   Ready    control-plane   11h   v1.26.2
  ```
 
+
 ![](https://imgur.com/epwFtra.png)
 
-### 刪除cluster: master / node
 
+### (待補)安裝 ingress-nginx-controller load balancer 
+   - ingress-nginx-controller-v1.6.4.yaml
+
+
+### (待補)Router 53 綁定 sub domain:  ml-dev.k8s.wenwen999.com
+   - namespace
+  
+
+### (待補) ml-dev.k8s.wenwen999.com 下安裝多個 docker 服務及定義多個serviuce
+   - https://ml-dev.k8s.wenwen999.com/my_service1/predict
+   - https://ml-dev.k8s.wenwen999.com/my_service2/predict
+
+
+### (待補) 設定橫向擴展 hpa
+
+
+### 刪除cluster: master / node
+   - 如果沒有使用 ==建議先刪除==
  ```bash=
  kops delete cluster --name=k8s.wenwen999.link --state=s3://k8s.wenwen999.link --yes
+
+ kops delete cluster --name=k8s.wenwen999.link --state=s3://kops.wenwen999.link --yes
  ```
 
