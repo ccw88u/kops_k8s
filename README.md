@@ -258,3 +258,17 @@ spec:
 
 ### 如果不想刪除暫停處理方式
    - 可以透過kops 將master / node : minsize / maxsize 改成:0 並佈署上cluster即可 
+   - 注意移除如 promethus / grafana 裡面有儲存帳密的pod 重新安裝時，密碼不會保留
+```
+$ kops edit ig master-us-west-2a
+  minsize / maxsize 改成:0
+$ kops edit ig node-us-west-2a
+  minsize / maxsize 改成:0
+
+$ kops update cluster
+
+$ kops update cluster --yes
+
+# 跑完後，master / node 都會移除
+$ kops rolling-update cluster
+```
