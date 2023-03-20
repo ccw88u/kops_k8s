@@ -256,3 +256,5 @@ spec:
  kops delete cluster --name=k8s.wenwen999.link --state=s3://kops.wenwen999.link --yes
  ```
 
+### 如果不想刪除暫停處理方式
+   - 可以透過kops 將master / node : minsize / maxsize 改成:0 並佈署上cluster即可 
