@@ -11,4 +11,4 @@ kubectl get svc -n kubernetes-dashboard -o wide
 echo "------------------------------------------------------------"
 echo "              ingress description"
 echo "------------------------------------------------------------"
-kubectl describe ingress kubernetes-dashboard-ingress -n kubernetes-dashboard
+kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | grep admin-user | awk '{print $1}')
