@@ -150,21 +150,103 @@ i-0c6e797d63bec4382   Ready    control-plane   11h   v1.26.2
 ![](https://imgur.com/epwFtra.png)
 
 
-### (待補)安裝 ingress-nginx-controller load balancer 
-   - ingress-nginx-controller-v1.6.4.yaml
+### 安裝 ingress-nginx-controller load balancer 
+   - 說明
+```
+ingress-nginx-controller 是一個 Kubernetes 上的 Ingress 控制器，它的作用是將外部請求路由到 Kubernetes 集群中的服務。具體來說，它會監聽 Kubernetes 集群中的 Ingress 資源，並根據這些資源配置 Nginx 的反向代理規則，將外部流量轉發到對應的服務中。
+通過 ingress-nginx-controller，您可以實現諸如 HTTP/HTTPS 路由、SSL 終止、負載均衡、URL 重新寫入等功能。它還支持基於主機名、路徑、HTTP 方法等條件進行路由，並且具有高度的可配置性和擴展性。
+總之，ingress-nginx-controller 可以讓您更輕鬆地管理和控制 Kubernetes 集群中的流量，提高服務的可用性和彈性。
+
+% ingress-nginx 網站
+https://github.com/kubernetes/ingress-nginx
+```
+   - 由於本次 K8S 版本為 1.26 版，故需要 V1.6.4 版 : ingress-nginx-controller-v1.6.4.yaml
+
+```bash=
+$  kubectl apply -f ingress-nginx-controller-v1.6.4.yaml
+```
+   
+
+### Router 53 綁定 sub domain:  ml-dev.k8s.wenwen999.com
+   - 建立 namespace: kubectl create namespace ml-dev
+   - ingress_ML-dev.yaml
+```
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ml-dev-ingress
+  namespace: ml-dev
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/proxy-body-size: "7m"
+    #ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"    
+spec:
+  rules:
+  # ml-dev.ponddy.org & ml-dev.ponddy.com 都要設定  
+  - host: ml-dev.k8s.wenwen999.link
+    http:
+      paths:
+      - path: /gop_eng(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: gop-eng
+            port:
+              name: http
+      - path: /gop_chi(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: gop-chi
+            port:
+              name: http              
+```
+
+```bash=
+kubectl apply -f ingress_ML-dev.yaml
+```
+   - 根據 ingress 生成 load balancer, 並於 route 53上綁定 domain
+   - $kubectl describe ingress ml-dev-ingress -n ml-dev
+   - ![](https://imgur.com/bvGOhVH.png)
+   - ![](https://imgur.com/HIA7jSx.png)
 
 
-### (待補)Router 53 綁定 sub domain:  ml-dev.k8s.wenwen999.com
-   - namespace
-  
-
-### (待補) ml-dev.k8s.wenwen999.com 下安裝多個 docker 服務及定義多個serviuce
+### ml-dev.k8s.wenwen999.com 下安裝多個 docker 服務及定義多個serviuce
    - https://ml-dev.k8s.wenwen999.com/my_service1/predict
    - https://ml-dev.k8s.wenwen999.com/my_service2/predict
 
 
-### (待補) 設定橫向擴展 hpa
+### 設定橫向擴展 hpa
+   - hpa for ml-dev
+   - 安裝addon 
+   - note
+```
+如果在 Kubernetes 中使用 Horizontal Pod Autoscaler (HPA) 時出現 "Targets unknown" 的狀態，通常是因為 HPA 無法確定目標應用程序的度量值。這可能是由於應用程序沒有公開任何用於度量的端點，或者端點的度量值未與 HPA 配置匹配造成的。
+通常，HPA 通過將度量值與指定的目標進行比較來決定是否應增加或減少副本數。如果 HPA 無法獲取度量值，則無法判斷當前副本數是否已達到目標值。
+要解決此問題，可以確保您的應用程序公開了與 HPA 配置匹配的度量值端點。例如，如果您正在使用 CPU 利用率作為度量值，則應確保應用程序公開了 CPU 利用率的度量值端點。此外，還可以檢查 HPA 配置是否正確，並確保它與應用程序的度量值匹配。
+您可以使用 kubectl describe hpa [HPA 名稱] 命令檢查 HPA 的詳細信息，以了解更多關於 "Targets unknown" 狀態的信息。
+```
+   - 設定其中一個 gop-eng 綁定 HPA (Horizontal Pod Autoscaler)
+     - $kubectl get hpa -n ml-prd
+```
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-gop-eng
+  namespace: ml-dev
+spec:
+  maxReplicas: 3  # define max replica count
+  minReplicas: 1  # define min replica count
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gop-eng
+  targetCPUUtilizationPercentage: 70 # target CPU utilization
 
+``` 
+![](https://imgur.com/oiBMz3J.png)
 
 ### 刪除cluster: master / node
    - 如果沒有使用 ==建議先刪除==
