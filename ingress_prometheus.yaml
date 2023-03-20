@@ -3,24 +3,42 @@ kind: Ingress
 metadata:
   name: prometheus-k8s-ingress
   namespace: monitoring
-  annotations: 
-    kubernetes.io/ingress.class: "nginx"
-    # nginx.ingress.kubernetes.io/proxy-body-size: "7m"
-    # ingress.kubernetes.io/rewrite-target: /
-    # nginx.ingress.kubernetes.io/rewrite-target: /$2
-    # nginx.ingress.kubernetes.io/use-regex: "true"      
+  annotations:
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: Authentication Required
 spec:
   rules:
-  - host: prometheus.k8s.wenwen999.link
-    http:
-      paths:
-      #- path: /(/|$)(.*)
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: prometheus-k8s
-            # name: prometheus-service
-            port:
-              # name: http
-              number: 8080
+    - host: alertmanager.k8s.wenwen999.link
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: alertmanager-main
+                port:
+                  name: web
+    - host: grafana.k8s.wenwen999.link
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  name: http
+    - host: prometheus.k8s.wenwen999.link
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-k8s
+                port:
+                  name: web
+
+
+               

@@ -97,6 +97,15 @@ spec:
 # 建立name space
 % kubectl create namespace ml-prd
 
+kubectl get svc
+
+kubectl get deployment
+
+kubectl delete -f XXX.yaml
+
+% 看namespace: kube-system 目前 service 服務
+kubectl get svc -n kube-system
+
 % 看 ingress pods
 $ kubectl get pods -n ingress-nginx
 $ kubectl get pods --all-namespaces -l app.kubernetes.io/name=ingress-nginx
@@ -119,6 +128,12 @@ kubectl get pod -A | grep metrics-server
 Reference
 #k8s 指定pod 運行 node
 https://tachingchen.com/tw/blog/kubernetes-assigning-pod-to-nodes/
+
+
+將某個服務由 load balancer 改成 nodeport 方式
+kubectl patch -p '{"spec":{"type": "NodePort"}}' services -n monitoring prometheus-k8s
+http://api.k8s.wenwen999.link:31548/
+
 
 # 看 nodes 的 labels 
 $ kubectl get nodes --show-labels
