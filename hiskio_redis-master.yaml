@@ -1,0 +1,44 @@
+
+apiVersion: apps/v1 # --> API 版本
+kind: Deployment # -->種類
+metadata: # -->識別名稱等
+  name: redis-master # -->Deployment的名稱
+spec: #--> 規格
+  replicas: 1 # --> 建立份數
+  selector:
+    matchLabels:
+      app: redis
+  template: #-->樣版描述
+    metadata:
+      labels: # -->定義標籤
+        app: redis # -->標籤定義格式為key: value
+        role: master
+        tier: backend
+    spec: #-->樣版規格
+      containers:  #-->容器定義
+      - name: master # -->名稱
+        image: gcr.io/google_containers/redis:e2e # -->docker image
+        resources: #-->運行環境定義
+          requests: #-->最低運行要求
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-master
+  labels:
+    app: redis
+    role: master
+    tier: backend
+spec:
+  ports:
+    # the port that this service should serve on
+  - port: 6379
+    targetPort: 6379 #-->對應Pod中的Container port，與port相同可省略
+  selector: #-->將traffic導到那些Pod
+    app: redis
+    role: master
+    tier: backend
